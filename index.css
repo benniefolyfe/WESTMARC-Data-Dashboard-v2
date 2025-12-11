@@ -1,0 +1,4 @@
+/* Remove blue focus ring around selected ZIP polygons */
+.leaflet-container .leaflet-interactive:focus {
+  outline: none !important;
+}

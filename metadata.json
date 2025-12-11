@@ -1,0 +1,5 @@
+{
+  "name": "West Valley Data Dashboard — Live Data",
+  "description": "An interactive dashboard providing key demographic, workforce, and economic data for various zip codes within Arizona's West Valley, built to support the WESTMARC data initiative.",
+  "requestFramePermissions": []
+}

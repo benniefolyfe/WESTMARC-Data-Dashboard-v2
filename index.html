@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>West Valley Data Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              figtree: ['Figtree', 'sans-serif'],
+            },
+            colors: {
+              'westmarc-midnight': '#1C4953',
+              'westmarc-desert-night': '#122426',
+              'westmarc-off-white': '#F2F2F2',
+              'westmarc-polaris': '#68D69C',
+              'westmarc-saguaro': '#2A7C5E',
+              'westmarc-brittlebrush': '#F1E55F',
+              'westmarc-cholla': '#FF5C3E',
+              'westmarc-amaranth': '#92193B',
+              'westmarc-light-gray': '#D9D9D9',
+              'westmarc-mid-gray': '#969696',
+              'westmarc-dark-gray': '#4B4B4B',
+            }
+          }
+        }
+      }
+    </script>
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@19.0.0-rc.0",
+          "react/": "https://esm.sh/react@19.0.0-rc.0/",
+          "react-dom": "https://esm.sh/react-dom@19.0.0-rc.0",
+          "react-dom/": "https://esm.sh/react-dom@19.0.0-rc.0/",
+          "react-dom/client": "https://esm.sh/react-dom@19.0.0-rc.0/client",
+          "react/jsx-runtime": "https://esm.sh/react@19.0.0-rc.0/jsx-runtime",
+
+          "leaflet": "https://esm.sh/leaflet@1.9.4",
+
+          "recharts": "https://esm.sh/recharts@2.12.7?deps=react@19.0.0-rc.0,react-dom@19.0.0-rc.0",
+          "geojson": "https://esm.sh/geojson@0.5.0",
+
+          "@google/genai": "https://esm.sh/@google/genai",
+
+          "react-markdown": "https://esm.sh/react-markdown@9.0.1?deps=react@19.0.0-rc.0",
+          "remark-gfm": "https://esm.sh/remark-gfm@4.0.0"
+        }
+      }
+    </script>
+</head>
+  <body class="font-figtree bg-westmarc-off-white">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
