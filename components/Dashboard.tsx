@@ -9,29 +9,20 @@ import {
   YAxis,
   Tooltip,
   Bar,
-  PieChart,
-  Legend,
-  Pie,
   Cell,
   LabelList,
 } from 'recharts';
 import { UsersIcon, BriefcaseIcon, HomeIcon, AcademicCapIcon } from './icons';
 import { ZipCodeData } from '../types';
-import { CustomTooltip } from './CustomTooltip';
 import { aggregateZipData } from '../utils/aggregateData';
 import { WEST_VALLEY_ZIP_CODES } from '../constants';
 import { MetricId, METRICS } from '../metrics';
-
-type View = 'dashboard' | 'compare' | 'aiInsights';
 
 interface DashboardProps {
   selectedZips: string[];
   allWestValleyData: Record<string, ZipCodeData>;
   selectedMetricIds: MetricId[];
-  onNavigate: (view: View) => void;
 }
-
-const zipToCityMap = Object.fromEntries(WEST_VALLEY_ZIP_CODES.map(item => [item.zip, item.city]));
 
 // Helper to check if a chart data array has meaningful data
 const hasData = (data: { value: number }[]) => {
@@ -44,7 +35,55 @@ const EmptyChartMessage = ({ message = "No data available" }) => (
     </div>
 );
 
-const Dashboard: React.FC<DashboardProps> = ({ selectedZips, allWestValleyData, selectedMetricIds, onNavigate }) => {
+interface HorizontalBarChartProps {
+    data: { name: string; value: number }[];
+    color?: string;
+    valueFormatter?: (value: number) => string;
+}
+
+// Unified Bar Chart Component for consistency
+const HorizontalBarChart = ({ 
+    data, 
+    color = "#2A7C5E",
+    valueFormatter = (val) => `${val.toFixed(1)}%`
+}: HorizontalBarChartProps) => {
+    if (!hasData(data)) return <EmptyChartMessage />;
+    
+    return (
+        <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={data} layout="vertical" margin={{ top: 5, right: 45, left: 10, bottom: 5 }}>
+                <XAxis type="number" stroke="#4B4B4B" fontSize={12} hide />
+                <YAxis 
+                    type="category" 
+                    dataKey="name" 
+                    width={100} 
+                    stroke="#4B4B4B" 
+                    fontSize={11} 
+                    interval={0}
+                    tick={{ width: 100 }} 
+                />
+                <Tooltip 
+                    cursor={{ fill: 'rgba(104, 214, 156, 0.2)' }} 
+                    formatter={valueFormatter} 
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)' }}
+                />
+                <Bar dataKey="value" fill={color} radius={[0, 4, 4, 0]} barSize={20}>
+                     <LabelList 
+                        dataKey="value" 
+                        position="right" 
+                        formatter={valueFormatter}
+                        fontSize={11} 
+                        fill="#4B4B4B"
+                        fontWeight="bold"
+                     />
+                </Bar>
+            </BarChart>
+        </ResponsiveContainer>
+    );
+};
+
+
+const Dashboard: React.FC<DashboardProps> = ({ selectedZips, allWestValleyData, selectedMetricIds }) => {
     // 1. Logic to handle "All West Valley" if no selection
     const comparisonData = useMemo(() => {
         // If no ZIPs selected, use ALL available data keys
@@ -57,8 +96,6 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedZips, allWestValleyData, 
     
     const combinedData = useMemo(() => aggregateZipData(comparisonData), [comparisonData]);
 
-    const PIE_COLORS = ['#1C4953', '#68D69C', '#2A7C5E', '#F1E55F', '#FF5C3E', '#92193B', '#D9D9D9'];
-  
     if (!combinedData) {
       return (
          <div className="text-center py-16 bg-white rounded-lg shadow-md">
@@ -164,33 +201,14 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedZips, allWestValleyData, 
                 {(showAll || isVisible('population')) && (
                     <div className="bg-white rounded-lg shadow-md p-6">
                         <ChartCard title="Race & Ethnicity">
-                            {hasData(data.demographics.raceEthnicity) ? (
-                                <ResponsiveContainer>
-                                    <PieChart>
-                                        <Pie data={data.demographics.raceEthnicity} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, value }) => `${name}: ${value.toFixed(1)}%`}>
-                                            {data.demographics.raceEthnicity.map((entry, index) => (<Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />))}
-                                        </Pie>
-                                        <Tooltip formatter={(value: number) => `${value.toFixed(1)}%`} />
-                                        <Legend formatter={(value: string) => value} />
-                                    </PieChart>
-                                </ResponsiveContainer>
-                            ) : <EmptyChartMessage />}
+                            <HorizontalBarChart data={data.demographics.raceEthnicity} color="#1C4953" />
                         </ChartCard>
                     </div>
                 )}
                 {(showAll || isVisible('medianAge')) && (
                     <div className="bg-white rounded-lg shadow-md p-6">
                         <ChartCard title="Age Distribution">
-                             {hasData(data.demographics.ageDistribution) ? (
-                                <ResponsiveContainer>
-                                    <BarChart data={data.demographics.ageDistribution} layout="vertical" margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                                        <XAxis type="number" stroke="#4B4B4B" fontSize={12} unit="%" />
-                                        <YAxis type="category" dataKey="name" stroke="#4B4B4B" fontSize={12} width={40} />
-                                        <Tooltip cursor={{ fill: 'rgba(104, 214, 156, 0.2)' }} formatter={(value: number) => `${value.toFixed(1)}%`} />
-                                        <Bar dataKey="value" fill="#68D69C" name="Percentage" unit="%" />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                             ) : <EmptyChartMessage />}
+                             <HorizontalBarChart data={data.demographics.ageDistribution} color="#68D69C" />
                         </ChartCard>
                     </div>
                 )}
@@ -217,32 +235,14 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedZips, allWestValleyData, 
                   {(showAll || hasAnyIndustrySelected) && (
                     <div className="bg-white rounded-lg shadow-md p-6">
                         <ChartCard title="Employment by Industry">
-                            {hasData(data.employmentByIndustry) ? (
-                                <ResponsiveContainer>
-                                    <BarChart data={data.employmentByIndustry} layout="vertical" margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
-                                        <XAxis type="number" stroke="#4B4B4B" fontSize={12} unit="%" />
-                                        <YAxis type="category" dataKey="name" width={120} stroke="#4B4B4B" fontSize={12} interval={0} />
-                                        <Tooltip cursor={{ fill: 'rgba(104, 214, 156, 0.2)' }} formatter={(value: number) => `${value.toFixed(1)}%`} />
-                                        <Bar dataKey="value" fill="#2A7C5E" name="Percentage" unit="%" />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            ) : <EmptyChartMessage />}
+                            <HorizontalBarChart data={data.employmentByIndustry} color="#2A7C5E" />
                         </ChartCard>
                     </div>
                   )}
                   {(showAll || isVisible('laborForceParticipationRate')) && (
                     <div className="bg-white rounded-lg shadow-md p-6">
                         <ChartCard title="Occupation Mix">
-                             {hasData(data.laborForce.occupationMix) ? (
-                                <ResponsiveContainer>
-                                    <BarChart data={data.laborForce.occupationMix} layout="vertical" margin={{ top: 5, right: 30, left: 10, bottom: 5 }}>
-                                        <XAxis type="number" stroke="#4B4B4B" fontSize={12} unit="%" />
-                                        <YAxis type="category" dataKey="name" width={110} stroke="#4B4B4B" fontSize={12} interval={0} />
-                                        <Tooltip cursor={{ fill: 'rgba(104, 214, 156, 0.2)' }} formatter={(value: number) => `${value.toFixed(1)}%`} />
-                                        <Bar dataKey="value" fill="#2A7C5E" name="Percentage" unit="%" />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                             ) : <EmptyChartMessage />}
+                             <HorizontalBarChart data={data.laborForce.occupationMix} color="#F1E55F" />
                         </ChartCard>
                     </div>
                   )}
@@ -266,34 +266,14 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedZips, allWestValleyData, 
                 {(showAll || isVisible('medianHomeValue')) && (
                   <div className="bg-white rounded-lg shadow-md p-6">
                     <ChartCard title="Year Structure Built">
-                         {hasData(data.housing.yearStructureBuilt) ? (
-                            <ResponsiveContainer>
-                                <PieChart>
-                                    <Pie data={data.housing.yearStructureBuilt} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, value }) => `${name}: ${value.toFixed(1)}%`}>
-                                        {data.housing.yearStructureBuilt.map((entry, index) => (<Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />))}
-                                    </Pie>
-                                    <Tooltip formatter={(value: number) => `${value.toFixed(1)}%`} />
-                                    <Legend />
-                                </PieChart>
-                            </ResponsiveContainer>
-                         ) : <EmptyChartMessage />}
+                         <HorizontalBarChart data={data.housing.yearStructureBuilt} color="#FF5C3E" />
                     </ChartCard>
                   </div>
                 )}
                 {(showAll || isVisible('meanTravelTimeToWork')) && (
                   <div className="bg-white rounded-lg shadow-md p-6">
                     <ChartCard title="Commute Mode Share">
-                         {hasData(data.commuting.modeShare) ? (
-                            <ResponsiveContainer>
-                                <PieChart>
-                                    <Pie data={data.commuting.modeShare} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, value }) => `${name}: ${value.toFixed(1)}%`}>
-                                        {data.commuting.modeShare.map((entry, index) => (<Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />))}
-                                    </Pie>
-                                    <Tooltip formatter={(value: number) => `${value.toFixed(1)}%`} />
-                                    <Legend />
-                                </PieChart>
-                            </ResponsiveContainer>
-                         ) : <EmptyChartMessage />}
+                         <HorizontalBarChart data={data.commuting.modeShare} color="#92193B" />
                     </ChartCard>
                   </div>
                 )}
@@ -314,22 +294,27 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedZips, allWestValleyData, 
               {renderSelectedEnrollmentCards()}
 
               {(showAll || isVisible('hsGraduationRate') || isVisible('collegeGraduationRate') || hasAnyEnrollmentSelected) && (
-                <div className="bg-white rounded-lg shadow-md p-6">
-                    <ChartCard title="School Enrollment Breakdown">
-                         {hasData(data.education.schoolEnrollment) ? (
-                            <ResponsiveContainer>
-                                <BarChart data={data.education.schoolEnrollment}>
-                                    <XAxis dataKey="name" stroke="#4B4B4B" fontSize={12} />
-                                    <YAxis stroke="#4B4B4B" fontSize={12} unit="%" />
-                                    <Tooltip cursor={{ fill: 'rgba(104, 214, 156, 0.2)' }} formatter={(value: number) => `${value.toFixed(1)}%`} />
-                                    <Bar dataKey="value" name="Percent of Total Enrolled" unit="%">
-                                        <LabelList dataKey="value" position="top" formatter={(val: number) => `${val.toFixed(1)}%`} fontSize={11} />
-                                        <Cell fill="#68D69C" />
-                                    </Bar>
-                                </BarChart>
-                            </ResponsiveContainer>
-                         ) : <EmptyChartMessage />}
-                    </ChartCard>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="bg-white rounded-lg shadow-md p-6">
+                        <ChartCard title="Total Enrollment (Students)">
+                            <HorizontalBarChart 
+                                data={data.education.schoolEnrollment} 
+                                color="#68D69C" 
+                                valueFormatter={(val) => Math.round(val).toLocaleString()} 
+                            />
+                        </ChartCard>
+                    </div>
+                    <div className="bg-white rounded-lg shadow-md p-6">
+                        <ChartCard title="Enrollment as % of Total Population">
+                             <HorizontalBarChart 
+                                data={data.education.schoolEnrollment.map(item => ({
+                                    name: item.name,
+                                    value: data.demographics.population > 0 ? (item.value / data.demographics.population) * 100 : 0
+                                }))} 
+                                color="#1C4953" 
+                            />
+                        </ChartCard>
+                    </div>
                 </div>
               )}
             </section>

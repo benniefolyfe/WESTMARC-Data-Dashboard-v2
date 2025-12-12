@@ -18,8 +18,6 @@ import { MetricResult } from '../utils/metricUtils';
 import { MapPinIcon } from './icons';
 import { CustomTooltip } from './CustomTooltip';
 
-type View = 'dashboard' | 'compare' | 'aiInsights';
-
 interface ComparisonDashboardProps {
   allData: ZipCodeData[];
   selectedZips: string[];
@@ -28,7 +26,6 @@ interface ComparisonDashboardProps {
   activeMetricId: MetricId | null;
   onSetActive: (id: MetricId) => void;
   zipToCityMap: Record<string, string>;
-  onNavigate: (view: View) => void;
 }
 
 const formatValue = (value: number, format: 'currency' | 'percent' | 'number' | undefined) => {
@@ -52,7 +49,6 @@ const ComparisonDashboard: React.FC<ComparisonDashboardProps> = ({
     activeMetricId,
     onSetActive,
     zipToCityMap,
-    onNavigate,
 }) => {
 
   const orderedMetricIds = (Object.keys(METRICS) as MetricId[]).filter((id) =>

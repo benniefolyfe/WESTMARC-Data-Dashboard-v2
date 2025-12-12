@@ -11,6 +11,7 @@ import type { ZipCodeData } from '../types';
 import { WEST_VALLEY_ZIP_CODES } from '../constants';
 import { MetricConfig, MetricId } from '../metrics';
 import { aggregateZipData } from '../utils/aggregateData';
+import { formatZipSelection, formatMetricSelection } from '../utils/formatting';
 
 interface ChatMessage {
   role: 'user' | 'model';
@@ -27,22 +28,7 @@ interface AIInsightsProps {
 }
 
 const formatZipsByCity = (zips: string[]): string => {
-  const zipToCityMap = Object.fromEntries(
-    WEST_VALLEY_ZIP_CODES.map((item) => [item.zip, item.city])
-  );
-
-  const cityToZips = zips.reduce<Record<string, string[]>>((acc, zip) => {
-    const city = zipToCityMap[zip] || 'Unknown City';
-    if (!acc[city]) {
-      acc[city] = [];
-    }
-    acc[city].push(zip);
-    return acc;
-  }, {});
-
-  return Object.entries(cityToZips)
-    .map(([city, zipList]) => `${city} (${zipList.join(', ')})`)
-    .join(', ');
+    return formatZipSelection(zips);
 };
 
 // Build a dynamic summary based on selected metrics
@@ -258,12 +244,10 @@ const AIInsights: React.FC<AIInsightsProps> = ({
     ? formatZipsByCity(selectedZips) 
     : "All West Valley";
   
-  const metricDescription = selectedMetricIds.length > 0 
-    ? selectedMetricIds.map((id) => metrics[id]?.label || id).join(', ')
-    : "All Metrics";
+  const metricDescription = formatMetricSelection(selectedMetricIds, metrics);
 
   return (
-    <div className="bg-white rounded-lg shadow-md h-[calc(100vh-10rem)] flex flex-col">
+    <div className="bg-white rounded-lg shadow-md flex flex-col">
       {/* Header */}
       <div className="p-4 border-b border-westmarc-light-gray flex-shrink-0 flex justify-between items-start">
         <div>
@@ -289,7 +273,7 @@ const AIInsights: React.FC<AIInsightsProps> = ({
       {/* Messages */}
       <div
         ref={scrollRef}
-        className="flex-1 p-4 overflow-y-auto bg-gray-50/50"
+        className="h-[60vh] min-h-[400px] p-4 overflow-y-auto bg-gray-50/50"
       >
         {chatHistory.length === 0 ? (
            <div className="flex h-full items-center justify-center text-center p-8 text-westmarc-mid-gray">

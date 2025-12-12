@@ -245,7 +245,6 @@ const App: React.FC = () => {
                     selectedZips={selectedZips} 
                     allWestValleyData={westValleyData} 
                     selectedMetricIds={persistedMetricIds}
-                    onNavigate={setView} 
                 />
             ) : view === 'compare' ? (
                 <ComparisonDashboard 
@@ -256,7 +255,6 @@ const App: React.FC = () => {
                     activeMetricId={mapMetricId}
                     onSetActive={handleSetActiveMetric}
                     zipToCityMap={zipToCityMap}
-                    onNavigate={setView}
                 />
             ) : (
                 <AIInsights 

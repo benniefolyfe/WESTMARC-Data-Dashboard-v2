@@ -6,11 +6,7 @@ interface ChartCardProps {
   containerClassName?: string;
 }
 
-const ChartCard: React.FC<ChartCardProps> = ({
-  title,
-  children,
-  containerClassName = "w-full h-[260px]"
-}) => {
+const ChartCard: React.FC<ChartCardProps> = ({title, children, containerClassName = "h-[260px]"}) => {
   return (
     <div>
       <h3 className="text-sm font-bold uppercase text-westmarc-mid-gray tracking-wider mb-4">

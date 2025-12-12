@@ -1,6 +1,7 @@
 
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { ChevronDownIcon, ChevronRightIcon } from './icons';
+import { formatZipSelection } from '../utils/formatting';
 
 interface ZipCodeSelectorProps {
   zipCodes: { zip: string; city: string }[];
@@ -80,11 +81,7 @@ const ZipCodeSelector: React.FC<ZipCodeSelectorProps> = ({
     });
   };
 
-  const selectionText = selectedZips.length === 0 
-    ? "Select cities or zip codes"
-    : selectedZips.length === 1
-    ? `${selectedZips[0]}`
-    : `${selectedZips.length} zips selected`;
+  const selectionText = formatZipSelection(selectedZips);
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -111,7 +108,7 @@ const ZipCodeSelector: React.FC<ZipCodeSelectorProps> = ({
         aria-haspopup="listbox"
         aria-expanded={isOpen}
       >
-        <span className="block truncate text-westmarc-midnight">{selectionText}</span>
+        <span className="block truncate text-westmarc-midnight" title={selectionText}>{selectionText}</span>
         <span className="absolute inset-y-0 right-0 flex items-center pr-2 pointer-events-none">
           <ChevronDownIcon className="h-5 w-5 text-gray-400" />
         </span>

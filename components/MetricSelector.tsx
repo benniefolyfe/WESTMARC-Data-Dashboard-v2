@@ -1,7 +1,8 @@
+
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import type { MetricId, MetricConfig } from '../metrics';
 import { ChevronDownIcon, ChevronRightIcon } from './icons';
-import { ALL_INDUSTRIES } from '../metrics';
+import { formatMetricSelection } from '../utils/formatting';
 
 interface MetricSelectorProps {
   metrics: Record<MetricId, MetricConfig>;
@@ -74,11 +75,7 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
   }
 
   const selectionLabel = useMemo(() => {
-    if (selectedMetricIds.length === 0) return 'Select data metrics';
-    if (selectedMetricIds.length === 1) {
-      return metrics[selectedMetricIds[0]]?.label || selectedMetricIds[0];
-    }
-    return `${selectedMetricIds.length} metrics selected`;
+    return formatMetricSelection(selectedMetricIds, metrics);
   }, [selectedMetricIds, metrics]);
 
   return (
@@ -105,7 +102,7 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
           focus:ring-westmarc-polaris text-base
         "
       >
-        <span className="text-westmarc-desert-night">{selectionLabel}</span>
+        <span className="block truncate text-westmarc-desert-night" title={selectionLabel}>{selectionLabel}</span>
         <ChevronDownIcon className="h-4 w-4 text-westmarc-mid-gray absolute right-3 top-1/2 -translate-y-1/2" />
       </button>
 
@@ -121,20 +118,18 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
 
               return (
                 <li key={group}>
-                  <div className="flex items-center px-3 py-2 hover:bg-westmarc-light-gray/50">
-                    <label className="flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 rounded border-gray-300 text-westmarc-polaris focus:ring-westmarc-saguaro"
-                        checked={allSelected}
-                        ref={el => { if (el) { el.indeterminate = isIndeterminate; } }}
-                        onChange={() => handleGroupToggle(metricsInGroup)}
-                      />
-                    </label>
-                    <div className="ml-3 text-xs font-bold uppercase text-westmarc-mid-gray tracking-wider select-none">
+                  <label className="flex w-full items-center px-3 py-2 hover:bg-westmarc-light-gray/50 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 rounded border-gray-300 text-westmarc-polaris focus:ring-westmarc-saguaro"
+                      checked={allSelected}
+                      ref={el => { if (el) { el.indeterminate = isIndeterminate; } }}
+                      onChange={() => handleGroupToggle(metricsInGroup)}
+                    />
+                    <span className="ml-3 text-xs font-bold uppercase text-westmarc-mid-gray tracking-wider select-none">
                       {group}
-                    </div>
-                  </div>
+                    </span>
+                  </label>
                   <ul className="pl-6">
                     {metricsInGroup.map((metric) => (
                       <li key={metric.id}>

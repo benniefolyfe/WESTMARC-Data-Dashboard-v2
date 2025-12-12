@@ -39,12 +39,13 @@ const BASE_METRICS: Record<MetricId, MetricConfig> = {
   hsGraduationRate: { id: 'hsGraduationRate', label: 'High School Graduation Rate (%)', group: 'Education', format: 'percent', getValue: (z) => z.education.hsGraduationRate },
   collegeGraduationRate: { id: 'collegeGraduationRate', label: "Bachelor's Degree or Higher (%)", group: 'Education', format: 'percent', getValue: (z) => z.education.collegeGraduationRate },
   
-  // Enrollment Breakdown (Metrics for detailed selection)
-  enrollmentPreschool: { id: 'enrollmentPreschool', label: 'Enrolled: Preschool (%)', group: 'Education', format: 'percent', getValue: (z) => z.education.schoolEnrollment.find(x => x.name === 'Preschool')?.value || 0 },
-  enrollmentKindergarten: { id: 'enrollmentKindergarten', label: 'Enrolled: Kindergarten (%)', group: 'Education', format: 'percent', getValue: (z) => z.education.schoolEnrollment.find(x => x.name === 'Kindergarten')?.value || 0 },
-  enrollmentGrade1to8: { id: 'enrollmentGrade1to8', label: 'Enrolled: Grade 1-8 (%)', group: 'Education', format: 'percent', getValue: (z) => z.education.schoolEnrollment.find(x => x.name === 'Grade 1-8')?.value || 0 },
-  enrollmentHighSchool: { id: 'enrollmentHighSchool', label: 'Enrolled: High School (%)', group: 'Education', format: 'percent', getValue: (z) => z.education.schoolEnrollment.find(x => x.name === 'High School')?.value || 0 },
-  enrollmentCollege: { id: 'enrollmentCollege', label: 'Enrolled: College/Grad (%)', group: 'Education', format: 'percent', getValue: (z) => z.education.schoolEnrollment.find(x => x.name === 'College/Grad')?.value || 0 },
+  // Enrollment Breakdown (Metrics now calculated as % of Total Population for better comparison)
+  // Data stores raw count, so we divide by total population * 100
+  enrollmentPreschool: { id: 'enrollmentPreschool', label: 'Enrolled: Preschool (% of Pop)', group: 'Education', format: 'percent', getValue: (z) => z.demographics.population > 0 ? ((z.education.schoolEnrollment.find(x => x.name === 'Preschool')?.value || 0) / z.demographics.population) * 100 : 0 },
+  enrollmentKindergarten: { id: 'enrollmentKindergarten', label: 'Enrolled: Kindergarten (% of Pop)', group: 'Education', format: 'percent', getValue: (z) => z.demographics.population > 0 ? ((z.education.schoolEnrollment.find(x => x.name === 'Kindergarten')?.value || 0) / z.demographics.population) * 100 : 0 },
+  enrollmentGrade1to8: { id: 'enrollmentGrade1to8', label: 'Enrolled: Grade 1-8 (% of Pop)', group: 'Education', format: 'percent', getValue: (z) => z.demographics.population > 0 ? ((z.education.schoolEnrollment.find(x => x.name === 'Grade 1-8')?.value || 0) / z.demographics.population) * 100 : 0 },
+  enrollmentHighSchool: { id: 'enrollmentHighSchool', label: 'Enrolled: High School (% of Pop)', group: 'Education', format: 'percent', getValue: (z) => z.demographics.population > 0 ? ((z.education.schoolEnrollment.find(x => x.name === 'High School')?.value || 0) / z.demographics.population) * 100 : 0 },
+  enrollmentCollege: { id: 'enrollmentCollege', label: 'Enrolled: College/Grad (% of Pop)', group: 'Education', format: 'percent', getValue: (z) => z.demographics.population > 0 ? ((z.education.schoolEnrollment.find(x => x.name === 'College/Grad')?.value || 0) / z.demographics.population) * 100 : 0 },
 
 };
 

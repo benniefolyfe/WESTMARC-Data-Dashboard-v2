@@ -105,9 +105,18 @@ const zipToCityMap = Object.fromEntries(WEST_VALLEY_ZIP_CODES.map(item => [item.
 
 const safeParseFloat = (value: string | undefined): number => {
     if (value === undefined || value === null || value ==='-') return 0;
-    const num = parseFloat(value);
+    // Remove commas to handle strings like "1,200" or "350,000" correctly
+    const cleanValue = value.replace(/,/g, '');
+    const num = parseFloat(cleanValue);
     if (isNaN(num) || num < 0) return 0;
     return num;
+}
+
+const calculatePercentage = (part: number, total: number): number => {
+    if (total <= 0) return 0;
+    const pct = (part / total) * 100;
+    // Clamp to 100 to prevent data artifacts from showing > 100%
+    return Math.min(pct, 100);
 }
 
 const fetchHistoricalPopulation = async (
@@ -178,14 +187,14 @@ const transformCensusRow = (
     populationGrowth: pastPopulation > 0 ? ((totalPopulation - pastPopulation) / pastPopulation) * 100 : NaN,
     medianAge: safeParseFloat(rowData[VARIABLE_MAP.medianAge]),
     genderDistribution: [
-      { name: 'Male', value: safeParseFloat(rowData[VARIABLE_MAP.totalMale]) / totalPopulation * 100 },
-      { name: 'Female', value: safeParseFloat(rowData[VARIABLE_MAP.totalFemale]) / totalPopulation * 100 },
+      { name: 'Male', value: calculatePercentage(safeParseFloat(rowData[VARIABLE_MAP.totalMale]), totalPopulation) },
+      { name: 'Female', value: calculatePercentage(safeParseFloat(rowData[VARIABLE_MAP.totalFemale]), totalPopulation) },
     ],
     ageDistribution: [
-        { name: '0-19', value: (safeParseFloat(rowData[VARIABLE_MAP.ageUnder5E]) + safeParseFloat(rowData[VARIABLE_MAP.age5to9E]) + safeParseFloat(rowData[VARIABLE_MAP.age10to14E]) + safeParseFloat(rowData[VARIABLE_MAP.age15to19E])) / totalPopulation * 100 },
-        { name: '20-39', value: (safeParseFloat(rowData[VARIABLE_MAP.age20to24E]) + safeParseFloat(rowData[VARIABLE_MAP.age25to34E])) / totalPopulation * 100 },
-        { name: '40-59', value: (safeParseFloat(rowData[VARIABLE_MAP.age35to44E]) + safeParseFloat(rowData[VARIABLE_MAP.age45to54E]) + safeParseFloat(rowData[VARIABLE_MAP.age55to59E])) / totalPopulation * 100 },
-        { name: '60+', value: (safeParseFloat(rowData[VARIABLE_MAP.age60to64E]) + safeParseFloat(rowData[VARIABLE_MAP.age65to74E]) + safeParseFloat(rowData[VARIABLE_MAP.age75to84E]) + safeParseFloat(rowData[VARIABLE_MAP.age85plusE])) / totalPopulation * 100 },
+        { name: '0-19', value: calculatePercentage(safeParseFloat(rowData[VARIABLE_MAP.ageUnder5E]) + safeParseFloat(rowData[VARIABLE_MAP.age5to9E]) + safeParseFloat(rowData[VARIABLE_MAP.age10to14E]) + safeParseFloat(rowData[VARIABLE_MAP.age15to19E]), totalPopulation) },
+        { name: '20-39', value: calculatePercentage(safeParseFloat(rowData[VARIABLE_MAP.age20to24E]) + safeParseFloat(rowData[VARIABLE_MAP.age25to34E]), totalPopulation) },
+        { name: '40-59', value: calculatePercentage(safeParseFloat(rowData[VARIABLE_MAP.age35to44E]) + safeParseFloat(rowData[VARIABLE_MAP.age45to54E]) + safeParseFloat(rowData[VARIABLE_MAP.age55to59E]), totalPopulation) },
+        { name: '60+', value: calculatePercentage(safeParseFloat(rowData[VARIABLE_MAP.age60to64E]) + safeParseFloat(rowData[VARIABLE_MAP.age65to74E]) + safeParseFloat(rowData[VARIABLE_MAP.age75to84E]) + safeParseFloat(rowData[VARIABLE_MAP.age85plusE]), totalPopulation) },
     ],
     raceEthnicity: [
         { name: 'Hispanic', value: safeParseFloat(rowData[VARIABLE_MAP.raceHispanicPE]) },
@@ -198,16 +207,17 @@ const transformCensusRow = (
     foreignBornShare: safeParseFloat(rowData[VARIABLE_MAP.foreignBornPE]),
   };
   
-  const totalEnrolled = safeParseFloat(rowData[VARIABLE_MAP.totalEnrolledInSchool]);
+  // NOTE: schoolEnrollment now stores RAW COUNTS, not percentages.
+  // This allows simpler calculation of "Share of Total Population" later.
   const education: Education = {
     hsGraduationRate: safeParseFloat(rowData[VARIABLE_MAP.hsGraduationRatePE]),
     collegeGraduationRate: safeParseFloat(rowData[VARIABLE_MAP.collegeGraduationRatePE]),
     schoolEnrollment: [
-        { name: 'Preschool', value: totalEnrolled > 0 ? safeParseFloat(rowData[VARIABLE_MAP.enrolledPreschool]) / totalEnrolled * 100 : 0 },
-        { name: 'Kindergarten', value: totalEnrolled > 0 ? safeParseFloat(rowData[VARIABLE_MAP.enrolledKindergarten]) / totalEnrolled * 100 : 0 },
-        { name: 'Grade 1-8', value: totalEnrolled > 0 ? safeParseFloat(rowData[VARIABLE_MAP.enrolledGrade1to8]) / totalEnrolled * 100 : 0 },
-        { name: 'High School', value: totalEnrolled > 0 ? safeParseFloat(rowData[VARIABLE_MAP.enrolled9to12]) / totalEnrolled * 100 : 0 },
-        { name: 'College/Grad', value: totalEnrolled > 0 ? safeParseFloat(rowData[VARIABLE_MAP.enrolledCollege]) / totalEnrolled * 100 : 0 },
+        { name: 'Preschool', value: safeParseFloat(rowData[VARIABLE_MAP.enrolledPreschool]) },
+        { name: 'Kindergarten', value: safeParseFloat(rowData[VARIABLE_MAP.enrolledKindergarten]) },
+        { name: 'Grade 1-8', value: safeParseFloat(rowData[VARIABLE_MAP.enrolledGrade1to8]) },
+        { name: 'High School', value: safeParseFloat(rowData[VARIABLE_MAP.enrolled9to12]) },
+        { name: 'College/Grad', value: safeParseFloat(rowData[VARIABLE_MAP.enrolledCollege]) },
     ]
   };
   

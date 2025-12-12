@@ -1,3 +1,4 @@
+
 import { ZipCodeData } from '../types';
 
 export const aggregateZipData = (zips: ZipCodeData[]): ZipCodeData | null => {
@@ -44,6 +45,19 @@ export const aggregateZipData = (zips: ZipCodeData[]): ZipCodeData | null => {
     }));
   };
 
+  const aggregateSum = (getter: (zip: ZipCodeData) => { name: string, value: number }[]) => {
+    const combined: { [name: string]: number } = {};
+    zips.forEach(zip => {
+        const list = getter(zip);
+        if (Array.isArray(list)) {
+            list.forEach(item => {
+                combined[item.name] = (combined[item.name] || 0) + item.value;
+            });
+        }
+    });
+    return Object.entries(combined).map(([name, value]) => ({ name, value }));
+  };
+
   const medianHomeValue = weightedAverage(z => z.housing.medianHomeValue);
   const medianHouseholdIncome = weightedAverage(z => z.economics.medianHouseholdIncome);
 
@@ -62,7 +76,7 @@ export const aggregateZipData = (zips: ZipCodeData[]): ZipCodeData | null => {
     education: {
       hsGraduationRate: weightedAverage(z => z.education.hsGraduationRate),
       collegeGraduationRate: weightedAverage(z => z.education.collegeGraduationRate),
-      schoolEnrollment: aggregateCategorical(z => z.education.schoolEnrollment)
+      schoolEnrollment: aggregateSum(z => z.education.schoolEnrollment) // Use Sum for raw counts
     },
     economics: {
         medianHouseholdIncome,
