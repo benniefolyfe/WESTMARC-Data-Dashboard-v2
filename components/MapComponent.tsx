@@ -1,5 +1,4 @@
 
-
 import React, { useEffect, useRef, useCallback } from 'react';
 import L, { Map as LeafletMap, GeoJSON as LeafletGeoJSON, LatLng, StyleFunction } from 'leaflet';
 import type { FeatureCollection } from 'geojson';
@@ -66,7 +65,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
     fillOpacity: 1,
   };
 
-  // One-time map + layer init
+  // Initialize the base map once
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
 
@@ -75,6 +74,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
       zoom: initialZoom,
       scrollWheelZoom: isExpanded,
       zoomControl: true, // Always show zoom controls
+      attributionControl: false, // Hide attribution to avoid overlap with overlay
     });
     mapRef.current = map;
 
@@ -85,6 +85,25 @@ const MapComponent: React.FC<MapComponentProps> = ({
           '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
       }
     ).addTo(map);
+
+    setTimeout(() => {
+        map.invalidateSize();
+    }, 100);
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+  }, [isExpanded]); // Re-init if isExpanded changes
+
+  // Add or replace GeoJSON layer when data changes
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    if (geoJsonLayerRef.current) {
+      geoJsonLayerRef.current.remove();
+    }
 
     const geoJsonLayer = L.geoJSON(geojsonData as any); // Style is applied dynamically in another effect
     
@@ -98,15 +117,7 @@ const MapComponent: React.FC<MapComponentProps> = ({
       }
     }
 
-    setTimeout(() => {
-        map.invalidateSize();
-    }, 100);
-
-    return () => {
-      map.remove();
-      mapRef.current = null;
-    };
-  }, [isExpanded]); // Re-init if isExpanded changes
+  }, [geojsonData, fitInitialBounds]);
 
 
   // Consolidated styling and interaction effect

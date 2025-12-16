@@ -1,5 +1,5 @@
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import DataCard from './DataCard';
 import ChartCard from './ChartCard';
 import {
@@ -12,7 +12,7 @@ import {
   Cell,
   LabelList,
 } from 'recharts';
-import { UsersIcon, BriefcaseIcon, HomeIcon, AcademicCapIcon } from './icons';
+import { UsersIcon, BriefcaseIcon, HomeIcon, AcademicCapIcon, SparklesIcon } from './icons';
 import { ZipCodeData } from '../types';
 import { aggregateZipData } from '../utils/aggregateData';
 import { WEST_VALLEY_ZIP_CODES } from '../constants';
@@ -81,7 +81,6 @@ const HorizontalBarChart = ({
         </ResponsiveContainer>
     );
 };
-
 
 const Dashboard: React.FC<DashboardProps> = ({ selectedZips, allWestValleyData, selectedMetricIds }) => {
     // 1. Logic to handle "All West Valley" if no selection
@@ -173,6 +172,7 @@ const Dashboard: React.FC<DashboardProps> = ({ selectedZips, allWestValleyData, 
   
     return (
       <div className="relative pb-10">
+        
         <div className="space-y-8">
           
           {/* Demographics Section */}

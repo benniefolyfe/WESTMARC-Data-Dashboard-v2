@@ -110,7 +110,9 @@ const MetricSelector: React.FC<MetricSelectorProps> = ({
       {isOpen && (
         <div className="absolute mt-1 max-h-80 w-full overflow-y-auto rounded-md border border-westmarc-light-gray bg-white shadow-lg z-20">
           <ul className="py-1 text-sm">
-            {Object.entries(groupedMetrics).map(([group, metricsInGroup]) => {
+            {Object.entries(groupedMetrics).map(([group, rawMetrics]) => {
+              // Explicitly cast to MetricConfig[] to fix type errors where inference fails
+              const metricsInGroup = rawMetrics as MetricConfig[];
               const groupMetricIds = metricsInGroup.map(m => m.id);
               const selectedCount = groupMetricIds.filter(id => selectedMetricIds.includes(id)).length;
               const allSelected = selectedCount === groupMetricIds.length;
