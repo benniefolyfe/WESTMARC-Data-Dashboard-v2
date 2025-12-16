@@ -16,17 +16,6 @@ import { aggregateZipData } from '../utils/aggregateData';
 import { formatZipSelection, formatMetricSelection } from '../utils/formatting';
 import ClipboardButton from './ClipboardButton';
 
-// Initialize Mermaid
-mermaid.initialize({
-  startOnLoad: false,
-  theme: 'neutral',
-  securityLevel: 'loose',
-  fontFamily: 'Figtree, sans-serif',
-  pie: {
-      useMaxWidth: false
-  }
-});
-
 interface ChatMessage {
   role: 'user' | 'model';
   content: string;
@@ -69,36 +58,130 @@ function buildFullDataContext(
   return `Context Location: ${locationDesc}\n\n**Data Context (JSON):**\n\`\`\`json\n${JSON.stringify(payload, null, 2)}\n\`\`\``;
 }
 
+// Normalize chart syntax to fix common AI formatting issues
+const normalizeMermaidChart = (chart: string): string => {
+  let normalized = chart.trim();
+  
+  // Fix "pie title" on same line issue
+  // Regex looks for "pie" followed by "title" on the same line (ignoring case)
+  // Replaces it with "pie" newline + indentation + "title"
+  // Example: "pie title My Chart" -> "pie\n    title My Chart"
+  if (/^pie\s+title\s+/i.test(normalized)) {
+      normalized = normalized.replace(/^pie\s+title\s+/i, 'pie\n    title ');
+  }
+  
+  return normalized;
+};
+
 // -- Mermaid Component --
 const MermaidChart = ({ chart }: { chart: string }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const uniqueId = useId().replace(/:/g, ''); // React 18+ unique ID, cleaned for CSS selectors
   
   useEffect(() => {
-    if (containerRef.current) {
-        // Prepare the container
-        containerRef.current.innerHTML = chart;
-        containerRef.current.removeAttribute('data-processed');
+    // Initialize mermaid with custom WESTMARC theme
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: 'base',
+      securityLevel: 'loose',
+      fontFamily: 'Figtree, sans-serif',
+      pie: { 
+        useMaxWidth: false,
+        textPosition: 0.6 // Slightly outer placement for labels
+      },
+      // Override theme variables to match dashboard palette
+      // Using 12 DISTINCT colors to avoid repetition in large datasets
+      themeVariables: {
+        darkMode: false,
+        background: '#ffffff',
+        fontFamily: 'Figtree, sans-serif',
         
-        // Attempt to render
-        mermaid.run({ 
-            nodes: [containerRef.current] 
-        }).catch((err: any) => {
-             console.error("Mermaid failed to render", err);
+        // General
+        primaryColor: '#F2F2F2', 
+        primaryTextColor: '#122426', // westmarc-desert-night
+        primaryBorderColor: '#D9D9D9',
+        lineColor: '#1C4953', // westmarc-midnight
+        secondaryColor: '#68D69C', // westmarc-polaris
+        tertiaryColor: '#F2F2F2',
+
+        // Pie Chart Specific - 12 Distinct Colors from/derived from Palette
+        pie1: '#1C4953', // Midnight (Dark Teal)
+        pie2: '#92193B', // Amaranth (Dark Red)
+        pie3: '#2A7C5E', // Saguaro (Dark Green)
+        pie4: '#FF5C3E', // Cholla (Orange)
+        pie5: '#4B4B4B', // Dark Gray
+        pie6: '#68D69C', // Polaris (Medium Green)
+        pie7: '#122426', // Desert Night (Blackish)
+        pie8: '#C4B000', // Dark Gold (Contrast safe version of Brittlebrush)
+        pie9: '#54808A', // Muted Midnight
+        pie10: '#C06C84', // Muted Amaranth
+        pie11: '#5E9982', // Muted Saguaro
+        pie12: '#CC7A66', // Muted Cholla
+        
+        // Pie Chart Text & Borders
+        pieTitleTextSize: '18px',
+        pieTitleTextColor: '#1C4953', // Midnight for title
+        pieSectionTextColor: '#ffffff', // White text on slices
+        pieLegendTextColor: '#122426', // Darker text for legend
+        pieStrokeColor: '#ffffff', // White borders between slices
+        pieStrokeWidth: '2px',
+        pieOuterStrokeWidth: '0px', // No outer border
+        
+        // Graph/Flowchart Specifics
+        mainBkg: '#ffffff', // Clean background
+        nodeBorder: '#1C4953',
+        nodeTextColor: '#122426',
+        edgeLabelBackground: '#ffffff',
+      }
+    });
+
+    const renderChart = async () => {
+        if (!containerRef.current) return;
+
+        // Normalize syntax before rendering
+        const normalizedChart = normalizeMermaidChart(chart);
+
+        try {
+            // Clear previous content
+            containerRef.current.innerHTML = '';
+            
+            // Create a unique ID for this specific render cycle
+            const id = `mermaid-${uniqueId}-${Date.now()}`;
+            
+            // Generate SVG
+            const { svg } = await mermaid.render(id, normalizedChart);
+            
+            if (containerRef.current) {
+                containerRef.current.innerHTML = svg;
+                
+                // Post-process SVG for cleaner scaling if needed
+                const svgElement = containerRef.current.querySelector('svg');
+                if (svgElement) {
+                    svgElement.style.maxWidth = '100%';
+                    svgElement.style.height = 'auto';
+                    // Remove explicit width/height attributes to allow flexbox scaling
+                    svgElement.removeAttribute('width');
+                }
+            }
+        } catch (err) {
+            console.error("Mermaid failed to render", err);
              // Fallback to text if render fails
              if (containerRef.current) {
-                 containerRef.current.innerHTML = `<pre class="text-xs text-red-500 whitespace-pre-wrap font-mono bg-gray-50 p-2 rounded">${chart}</pre>`;
+                 containerRef.current.innerHTML = `<div class="p-2 bg-red-50 border border-red-200 rounded text-red-600 text-xs font-mono whitespace-pre-wrap">Failed to render chart:\n${normalizedChart}</div>`;
              }
-        });
-    }
-  }, [chart]);
+        }
+    };
+
+    renderChart();
+  }, [chart, uniqueId]);
 
   return (
-      <div className="relative group my-6 bg-white border border-westmarc-light-gray rounded-lg p-4 shadow-sm">
+      <div className="relative group my-6 bg-white rounded-lg p-4 shadow-md overflow-hidden">
            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 bg-white/80 backdrop-blur rounded">
                <ClipboardButton targetRef={containerRef} ariaLabel="Copy Chart Image" />
            </div>
            <div 
-             className="mermaid overflow-x-auto flex justify-center items-center min-h-[200px]" 
+             className="mermaid-container overflow-x-auto flex justify-center items-center min-h-[300px]" 
              ref={containerRef}
            />
       </div>
@@ -122,20 +205,14 @@ const MarkdownComponents: Components = {
         );
     },
     code: ({ node, inline, className, children, ...props }: any) => {
-        const match = /language-(\w+)/.exec(className || '');
         const content = String(children).replace(/\n$/, '');
-
-        // Heuristic: Check if content looks like Mermaid syntax even if language tag is missing
-        const cleanContent = content.trim();
-        const isMermaid = (match && match[1] === 'mermaid') || 
-                          (!inline && (
-                              cleanContent.startsWith('pie') || 
-                              cleanContent.startsWith('graph') || 
-                              cleanContent.startsWith('flowchart') || 
-                              cleanContent.startsWith('sequenceDiagram') ||
-                              cleanContent.startsWith('classDiagram') || 
-                              cleanContent.startsWith('gantt')
-                          ));
+        const match = /language-(\w+)/.exec(className || '');
+        
+        // Robust heuristic for Mermaid detection
+        // Matches standard mermaid keywords at the start of the string (ignoring whitespace)
+        const mermaidPattern = /^\s*(pie|graph|flowchart|sequenceDiagram|classDiagram|stateDiagram|erDiagram|gantt|userJourney|journey|gitGraph|mindmap|timeline|quadrantChart|requirementDiagram|c4Context)/i;
+        
+        const isMermaid = (match && match[1] === 'mermaid') || (!inline && mermaidPattern.test(content));
 
         if (!inline && isMermaid) {
             return <MermaidChart chart={content} />;

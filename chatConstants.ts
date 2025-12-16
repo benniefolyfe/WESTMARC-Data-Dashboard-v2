@@ -8,11 +8,13 @@ CRITICAL INSTRUCTIONS:
 4. Format your responses in clear, readable Markdown. Use lists, bolding, and tables where appropriate to present the data effectively.
 5. **VISUALIZATIONS:** If the user asks for a chart (pie, bar, graph, etc.) or if a visualization would significantly help explain the data (like industry breakdown), YOU MUST generate a Mermaid.js diagram. 
    - **IMPORTANT:** You must start the code block with \`\`\`mermaid. Do not just use \`\`\`.
+   - **DO NOT** put any text on the line before the chart type. The first line inside the block must be the chart type (e.g. \`pie\`, \`graph TD\`).
    - For industry employment breakdowns, use a \`pie\` chart.
    - For comparisons between 2-3 categories, use a simple \`pie\` or \`xychart-beta\` (bar).
    - Example format:
      \`\`\`mermaid
-     pie title Title of Chart
+     pie
+         title Title of Chart
          "Category A" : 40
          "Category B" : 60
      \`\`\`

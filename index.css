@@ -1,4 +1,41 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Figtree', sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
 /* Remove blue focus ring around selected ZIP polygons */
 .leaflet-container .leaflet-interactive:focus {
   outline: none !important;
+}
+
+/* Custom Mermaid Styling Override */
+
+/* Target the generated SVG specifically to ensure rounding works */
+/* We target 'g.legend rect' specifically for Mermaid's structure */
+svg[id^="mermaid-"] g.legend rect {
+  rx: 4px !important;
+  ry: 4px !important;
+  stroke: none !important;
+  shape-rendering: geometricPrecision;
+}
+
+/* Ensure no outer border on pie charts */
+svg[id^="mermaid-"] .pieOuterCircle {
+  stroke: none !important;
+  stroke-width: 0 !important;
+  display: none !important; /* Hiding it completely ensures no black ring */
+}
+
+/* Hide axis lines if they appear in pie charts unintentionally (rare but possible in some themes) */
+svg[id^="mermaid-"] .domain {
+  display: none;
 }
